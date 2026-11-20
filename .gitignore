@@ -1,0 +1,11 @@
+bin/*
+!bin/.gitkeep
+generated/*
+!generated/.gitkeep
+data/*
+!data/.gitkeep
+__pycache__/
+*.o
+*.exe
+.vscode/
+.idea/
