@@ -160,5 +160,3 @@ RelOp Value` the second).
   consumes `FIN`. Done.
   If you can walk through this by hand with the parse table from section 6,
   your table is built correctly.
-
-Claude finished the response

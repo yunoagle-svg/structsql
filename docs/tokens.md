@@ -86,5 +86,3 @@ real.
 | ------- | ------------------------------------------------------------------------------ |
 | `EOF`   | end of the source file                                                         |
 | `ERROR` | an unrecognized character (see `output_contract.md` for the error line format) |
-
-Claude finished the response
