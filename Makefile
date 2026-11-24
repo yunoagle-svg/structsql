@@ -1,31 +1,26 @@
-# StructSQL mini-compiler - build script
+# StructSQL mini-compiler - build script (Go compiler core)
 #
 #   make          build the compiler  -> bin/structsql
-#   make test     run the compiler on every file in tests/ (valid.sql must pass, err_*.sql must fail)
-#   make demo     compile tests/valid.sql, build the generated C program and run it (writes data/*.dat)
-#   make clean    remove build files, generated program and data files (keeps the .gitkeep files)
+#   make test     go unit tests, then run the compiler on tests/*.sql (valid.sql must pass, err_*.sql must fail)
+#   make demo     compile tests/valid.sql to C, build the generated program with gcc and run it (writes data/*.dat)
+#   make fmt      format all Go code
+#   make clean    remove the binary, generated program and data files (keeps the .gitkeep files)
 
-CC      = gcc
-CFLAGS  = -std=c11 -Wall -Wextra -g
+GO  = go
+CC  = gcc
+BIN = bin/structsql
 
-SRC     = $(wildcard src/*.c)
-HDR     = $(wildcard src/*.h)
-OBJ     = $(patsubst src/%.c,bin/obj/%.o,$(SRC))
-BIN     = bin/structsql
-
-.PHONY: all test demo clean
+.PHONY: all test demo fmt clean
 
 all: $(BIN)
 
-$(BIN): $(OBJ)
-	$(CC) $(CFLAGS) -o $@ $^
-
-# every object depends on all headers (small project, simplest safe rule)
-bin/obj/%.o: src/%.c $(HDR)
-	@mkdir -p bin/obj
-	$(CC) $(CFLAGS) -c $< -o $@
+$(BIN): $(wildcard src/*.go) go.mod
+	@mkdir -p bin
+	$(GO) build -o $(BIN) ./src
 
 test: all
+	$(GO) vet ./src
+	$(GO) test ./src
 	@fail=0; \
 	./$(BIN) sem tests/valid.sql >/dev/null 2>&1 \
 	    && echo "ok   tests/valid.sql" \
@@ -41,9 +36,11 @@ test: all
 
 demo: all
 	./$(BIN) gen tests/valid.sql generated/out.c
-	$(CC) $(CFLAGS) -o generated/out generated/out.c
+	$(CC) -Wall -Wextra -o generated/out generated/out.c
 	cd data && ../generated/out
 
+fmt:
+	$(GO) fmt ./src
+
 clean:
-	rm -rf bin/obj $(BIN)
-	rm -f generated/out generated/out.c data/*.dat
+	rm -f $(BIN) generated/out generated/out.c data/*.dat
