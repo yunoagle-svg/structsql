@@ -1,5 +1,8 @@
-// Token types (keywords, types, literals, operators, separators), the Token struct (type, lexeme, line, column) and keyword lookup table (case-insensitive).
 package main
+
+import (
+	"fmt"
+)
 
 /*
 
@@ -126,17 +129,83 @@ inputsTypeNT ->
 */
 
 
+type Kind int
 
 
-
-
-type Token struct {
-	Literal string
-	line int
-	column int
-
-} 
 
 const (
+	// --------- Keywords -------------
 
+	UNKNOWN_TOKEN       Kind = iota
+	STARTstmt                   // PROGRAMME
+	FINALstmt                   // ;
+	ENDstmt                     // FIN
+	TABLECREATINGstmt           // CREATE
+	TABLEstmt                   // TABLE
+	INSERTINGstmt               // INSERT 
+	INTOstmt                    // INTO
+	VALUESstmt                  // VALUES
+	SELECTstmt                  // SELECT
+	FROMstmt                    // FROM
+	WHEREstmt                   // WHERE
+	TYPEINTstmt                 // INTEGER
+	TYPEFLOATstmt               // REAL
+	TYPESTRINGstmt              // string
+
+	// ---------- Punctuation ----------
+
+	OPENEDP                     // (
+	CLOSEDP                     // )
+	COMMA                       // ,
+	OPENEDB                     // [
+	CLOSEDB                     // ]
+
+	// ------------ Operators ------------
+
+	LESS_THAN                   // <
+	GREATER_THAN                // >
+	NOT_EQUAL                   // != 
+	EQUAL                       // = 
+	LESS_THAN_OR_EQUAL          // <= 
+	GREATER_THAN_OR_EQUAL       // >=
+	STAR                        // *
+
+	// ------------ Literals -------------
+
+	IDEN                        // for example : university or hello1 or MyDataBase1 ...ect
+	NUMBER_INT                  // INTERGER NUMBERS for examples : 12 22 0 12 18 177 
+	NUMBER_REAL                 // FLOATING-POINT NUMBERS for examples : 1.5 0.2 15.55 13.6666
+	I_string                    // a whole input including the quotes 'benali' 'omar' 'example@gmail.com'
+	EOF                         // END OF FILE 
+	LEXICAL_ERROR               // anycaracter that isnt a token 
 )
+
+type Token struct {
+	Literal string              // The Literal token value like ; FIN INSERT
+	line int                    // line of the token
+	column int                  // column of the token
+	TokenType Kind              // the token type like EQUAL OR STAR OR ect
+} 
+
+var KeyWords = map[string]Kind {
+	"PROGRAMME":        STARTstmt,                        
+	"FIN":              ENDstmt,                    
+	"CREATE":           TABLECREATINGstmt,          
+	"TABLE":            TABLEstmt,                   
+	"INSERT":           INSERTINGstmt,               
+	"INTO":             INTOstmt,                    
+	"VALUES":           VALUESstmt,                  
+	"SELECT":           SELECTstmt,                  
+	"FROM":             FROMstmt,                    
+	"WHERE":            WHEREstmt,                   
+	"INTEGER":          TYPEINTstmt,                 
+	"REAL":             TYPEFLOATstmt,               
+	"string":           TYPESTRINGstmt,	
+}
+
+func (t Token) TokenInfo() string {
+	return fmt.Sprintf("Token{ Type : %v , Value : %v , line : %v, column : %v }", t.TokenType, t.Literal, t.line, t.column);
+}
+
+
+
