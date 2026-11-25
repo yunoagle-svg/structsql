@@ -214,6 +214,9 @@ func check(str string, line int, column int) (Token, error) {
 }
 
 func isI_Sting(s string) bool {
+	/*
+	check for the 'kdjsqhd' 'omar' 'example@gmail.com' like
+	*/
 	if len(s) < 2 || s[0] != '\'' || s[len(s)-1] != '\'' {
 		return false
 	}
@@ -221,6 +224,7 @@ func isI_Sting(s string) bool {
 }
 
 func isSymbol(str string) (Kind, bool) {
+	/* check if ites a symbol */
 	if len(str) == 0 || len(str) >= 3 {
 		return LEXICAL_ERROR, false
 	}
@@ -258,6 +262,8 @@ func isSymbol(str string) (Kind, bool) {
 }
 
 func isIdent(str string) bool {
+	/* check if identifier and accept only start with a letter and followed by letter or digit
+	no symbols */
 	
 	if len(str) == 0 || !isLetter(string(str[0])) {
 		return false
@@ -272,17 +278,11 @@ func isIdent(str string) bool {
 	return true
 }
 
-func (l *lexer) peekChar() byte {
-	// CHANGED: l.input -> l.source
-	if l.position+1 >= len(l.source) {
-		return 0 // nothing there — a safe "not a match" value
-	}
-	// CHANGED: l.input -> l.source
-	return l.source[l.position+1]
-}
+
 
 func main() {
-	// CHANGED: := declaration, handled both return values of splitIntoTokens(), and used fmt.Println
+	/* a test */
+	
 	source := `PROGRAMME Universite;
  CREATE TABLE Etudiant (id INTEGER, age INTEGER, moyenne REAL);
 FIN`
