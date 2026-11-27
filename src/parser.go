@@ -45,36 +45,68 @@ UNKNOWN_TOKEN          zero value of Kind, never emitted on purpose
 EOF                    end of source, appended once, last in slice
 LEXICAL_ERROR          unrecognized character, reported but scanning continues
 
-S -> STARTING stmts ENDING | empty ;
+S -> STARTING stmts ENDING
 
-STARTING -> STARTstmt IDEN FINALstmt;
-ENDING   -> ENDstmt EOF
+STARTING -> STARTstmt IDEN FINALstmt
+ENDING   -> ENDstmt
 
-stmts ->
-      line
-	  line stmts
-	  ;
-line ->
-      CREATING
-	  INSERTING
-	  QUERIES
-	  EMPTY
-	;
---------- create section start  -------------------
-CREATING -> CREATEstmt TABLEstmt IDEN OPENEDP CREATINGEXP CLOSEDP FINALstmt
-CREATINGEXP ->
-      IDEN TYPE COMMACASE
-	;
-COMMACASE ->
-      COMMA IDEN TYPE
-	  EMPTY
-	;
-TYPE ->
-      TYPEINTstmt
-	  TYPEFLOATstmt
-	  TYPESTRINGstmt
-	;
---------- creating section DONE ------------------
+stmts -> line stmts | EMPTY
+
+line -> CREATING
+      | INSERTING
+      | QUERIES
+
+--------- create section start -------------------
+CREATING -> TABLECREATINGstmt TABLEstmt IDEN OPENEDP CREATINGEXP CLOSEDP FINALstmt
+
+CREATINGEXP -> IDEN TYPE COMMACASE_C
+
+COMMACASE_C -> COMMA IDEN TYPE COMMACASE_C | EMPTY
+
+TYPE -> TYPEINTstmt
+      | TYPEFLOATstmt
+      | TYPESTRINGstmt OPENEDB NUMBER_INT CLOSEDB
+
+--------- creating section done ------------------
+
+--------- insertion section start ----------------
+INSERTING -> INSERTINGstmt INTOstmt IDEN VALUESstmt OPENEDP INSERTIONEXP CLOSEDP FINALstmt
+
+INSERTIONEXP -> LITERALVALUES COMMACASES_I
+
+LITERALVALUES -> NUMBER_INT
+               | NUMBER_REAL
+               | I_string
+
+COMMACASES_I -> COMMA LITERALVALUES COMMACASES_I | EMPTY
+
+--------- insertion section done -----------------
+
+--------- queries section start -------------------
+QUERIES -> SELECTstmt SELECTEXP FROMstmt FROMEXP WHERECASE FINALstmt
+
+SELECTEXP -> STAR
+           | IDEN COMMACASE_SE
+
+COMMACASE_SE -> COMMA IDEN COMMACASE_SE | EMPTY
+
+FROMEXP -> IDEN
+
+WHERECASE -> WHEREstmt CONDITON | EMPTY
+
+CONDITON -> CONDITIONEXP OP CONDITIONEXP
+
+CONDITIONEXP -> NUMBER_INT
+              | NUMBER_REAL
+              | I_string
+              | IDEN
+
+OP -> LESS_THAN
+    | GREATER_THAN
+    | NOT_EQUAL
+    | EQUAL
+    | LESS_THAN_OR_EQUAL
+    | GREATER_THAN_OR_EQUAL
 
 */
 
