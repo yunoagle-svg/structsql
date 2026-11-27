@@ -7,17 +7,17 @@ import (
 )
 
 type lexer struct {
-	source   string  // the source code in string 
+	source   string  // the source code in string
 	position int     // position of the pointer when we move
-	line     int     // line 
+	line     int     // line
 	column   int     // column
 }
 
 func (t *Token) fillup(lit string, line int, column int, kind Kind) {
 	/*
-	
+
 	just infos fillup for the token struct
-	
+
 	*/
 	t.Literal = lit
 	t.line = line
@@ -53,7 +53,7 @@ func isLetter(s string) bool {
 func createLexer(str string) *lexer {
 	/* inisialize the constructor  */
 	return &lexer{
-		
+
 		source:   str,
 		position: 0,
 		line:     0,
@@ -95,13 +95,22 @@ func (l *lexer) splitIntoTokens() ([]Token, error) {
 		if lcounter, ccounter, ok := isWhiteSpace(chStr); ok { // wee skipp the white spaces and check for the result the word before the the space
 			if !isEmpty(result) { // we check when if result isnt ampty so we check for tokens
 				tok, err := check(result, l.line, l.column)
-				if err != nil {
-					return tokens, err
-				}
+				
+				//     if err != nil { return tokens, err }
+				//     tokens = append(tokens, tok)
+				// which stopped the WHOLE scan the first time any bad word
+				// showed up. Now we keep the LEXICAL_ERROR token check()
+				// already built, print the error, and keep going. Example:
+				// for "create TABLE ... @@@ FIN", before this change FIN
+				// never showed up in the output after the @@@ error — now
+				// it will.
 				tokens = append(tokens, tok)
+				if err != nil {
+					fmt.Println(err)
+				}
 				result = ""
 			}
-			l.line += lcounter // adding to the lexer structure the lines we skipped 
+			l.line += lcounter // adding to the lexer structure the lines we skipped
 			if lcounter > 0 {
 				l.column = 0
 			} else {
@@ -115,11 +124,11 @@ func (l *lexer) splitIntoTokens() ([]Token, error) {
 		first len = 2 case
 		so we check before if the current position + 1 isnt >= the len(source)
 		then we take the the two symbols and store them in a temp and check for the word or token
-		before the operatore and add it than check for the temp  that hold the operator 
-		for example we have 
-		            
-		                   | a | g | e | < | = | 1 | 8 
-						   or 
+		before the operatore and add it than check for the temp  that hold the operator
+		for example we have
+
+		                   | a | g | e | < | = | 1 | 8
+						   or
 						   | U | n | i | v | e | r | s | i | t | e | ; EOS (END OF STRING)
 		*/
 		if l.position+1 < len(l.source) { // here it check for the word before the symbol token case of len -> 2
@@ -127,10 +136,12 @@ func (l *lexer) splitIntoTokens() ([]Token, error) {
 			if symKind, ok := isSymbol(twoChar); ok {
 				if !isEmpty(result) {
 					tok, err := check(result, l.line, l.column)
-					if err != nil {
-						return tokens, err
-					}
+					// CHANGED: same reasoning as above — keep scanning
+					// instead of returning out of the whole function.
 					tokens = append(tokens, tok)
+					if err != nil {
+						fmt.Println(err)
+					}
 					result = ""
 				}
 
@@ -147,10 +158,11 @@ func (l *lexer) splitIntoTokens() ([]Token, error) {
 			/* here if its a symbol of len -> 1 */
 			if !isEmpty(result) {
 				tok, err := check(result, l.line, l.column)
-				if err != nil {
-					return tokens, err
-				}
+				// CHANGED: same reasoning as above.
 				tokens = append(tokens, tok)
+				if err != nil {
+					fmt.Println(err)
+				}
 				result = ""
 			}
 
@@ -167,13 +179,27 @@ func (l *lexer) splitIntoTokens() ([]Token, error) {
 
 	if !isEmpty(result) {
 		tok, err := check(result, l.line, l.column)
-		if err != nil {
-			return tokens, err
-		}
+		// same reasoning — this is the last word in the file (no
+		// trailing whitespace/symbol to trigger a flush), so it needs the
+		// same "keep going, don't bail" treatment as the other three spots.
 		tokens = append(tokens, tok)
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 
+	//  One EOF token appended at the very
+	//  end so the parser (or anything printing the token list) can see where
+	//  the stream actually ends, e.g. for "FIN" you now get
+	//  ...{Literal:FIN ... TokenType:ENDstmt}, {Literal:"" ... TokenType:EOF}
+	//  as the last entry.
+	tokens = append(tokens, Token{Literal: "", line: l.line, column: l.column, TokenType: EOF})
+
 	return tokens, nil
+	//always nil now, since every lexical error is already reported
+	// (fmt.Println above) and recorded in-stream as a LEXICAL_ERROR token at
+	// the exact spot it happened, instead of aborting the whole function
+	// with one error value.
 }
 
 func check(str string, line int, column int) (Token, error) {
@@ -215,7 +241,7 @@ func check(str string, line int, column int) (Token, error) {
 
 func isI_Sting(s string) bool {
 	/*
-	check for the 'kdjsqhd' 'omar' 'example@gmail.com' like
+	check for the I_string such as  'kdjsqhd' 'omar' 'example@gmail.com' like
 	*/
 	if len(s) < 2 || s[0] != '\'' || s[len(s)-1] != '\'' {
 		return false
@@ -264,11 +290,11 @@ func isSymbol(str string) (Kind, bool) {
 func isIdent(str string) bool {
 	/* check if identifier and accept only start with a letter and followed by letter or digit
 	no symbols */
-	
+
 	if len(str) == 0 || !isLetter(string(str[0])) {
 		return false
 	}
-	
+
 	for _, ch := range str {
 		s := string(ch)
 		if !isDigit(s) && !isLetter(s) {
@@ -277,22 +303,14 @@ func isIdent(str string) bool {
 	}
 	return true
 }
-
-
-
 func main() {
-	/* a test */
-	
-	source := `PROGRAMME Universite;
- CREATE TABLE Etudiant (id INTEGER, age INTEGER, moyenne REAL);
-FIN`
-
-	l := createLexer(source)
-	tokens, err := l.splitIntoTokens()
-	if err != nil {
-		fmt.Println("Error:", err)
-	}
-    for _, token := range tokens {
-        fmt.Printf("%+v\n", token)
-    }
+		s := `create TABLE Etudiant (id INTEGER, nom string[20]); @@@ FIN`
+		l := createLexer(s)
+		tokens, err := l.splitIntoTokens()
+		if err != nil {
+			fmt.Println("Error:", err)
+		}
+		for _, token := range tokens {
+			fmt.Printf("%+v\n", token)
+		}
 }
