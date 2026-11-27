@@ -131,9 +131,73 @@ type parser struct {
 
 
 /*
-example of ll(1) algo chaine 
 Stack [EOF($), S(axiome)]
-chaineOfTokens(from the lexer) [STARTstmt(PROGRAMME), IDEN(Etudiant), FINALstmt(;), ENDstmt(FIN)]
+chaineOfTokens(from the lexer) [STARTstmt(PROGRAMME){0}, IDEN(Etudiant){1}, FINALstmt(;){2}, ENDstmt(FIN){3}, EOF{4}]
+{n} is the position of each token in the chaine
+
+1 -> [EOF, S]     top : S    tok: PROGRAMME  pos : 0
+
+S is non-terminal so we look for table["S"]["STARTstmt"] = [STARTING, stmts, ENDING]
+so we pop S
+and we push ENDING then stmts then STARTING to the stack
+stack becomes [EOF, ENDING, stmts, STARTING] top : STARTING(NT)  tok: PROGRAMME pos : 0
+
+
+2 -> [EOF, ENDING, stmts, STARTING] top : STARTING(NT)  tok: PROGRAMME pos : 0
+
+STARTING is non-terminal so we look for table["STARTING"]["STARTstmt"] = [STARTstmt, IDEN, FINALstmt]
+so we pop STARTING
+and push FINALstmt then IDEN then STARTstmt
+stack becomes [EOF, ENDING, stmts, FINALstmt, IDEN, STARTstmt] top : STARTstmt tok : PROGRAMME pos : 0
+
+
+3 -> [EOF, ENDING, stmts, FINALstmt, IDEN, STARTstmt] top : STARTstmt tok : PROGRAMME pos : 0
+STARTstmt(PROGRAMME) is terminal so we check if top == tok => STARTstmt(PROGRAMME) == PROGRAMME => true
+so we check if top == EOF (stack is empty) if it is we accept
+else we pop(top)
+and pos++
+stack becomes [EOF, ENDING, stmts, FINALstmt, IDEN] top : IDEN tok : IDEN(Etudiant) pos : 1
+
+
+4 -> [EOF, ENDING, stmts, FINALstmt, IDEN] top : IDEN tok : IDEN(Etudiant) pos : 1
+IDEN is terminal so we check if top == tok => IDEN == IDEN(Etudiant) => true
+top != EOF so we pop(top)
+and pos++
+stack becomes [EOF, ENDING, stmts, FINALstmt] top : FINALstmt tok : FINALstmt(;) pos : 2
+
+
+5 -> [EOF, ENDING, stmts, FINALstmt] top : FINALstmt tok : FINALstmt(;) pos : 2
+FINALstmt(;) is terminal so we check if top == tok => FINALstmt(;) == FINALstmt(;) => true
+top != EOF so we pop(top)
+and pos++
+stack becomes [EOF, ENDING, stmts] top : stmts tok : ENDstmt(FIN) pos : 3
+
+
+6 -> [EOF, ENDING, stmts] top : stmts tok : ENDstmt(FIN) pos : 3
+stmts is non-terminal so we look for table["stmts"]["ENDstmt"] = [] (EMPTY)
+so we pop stmts
+and we push nothing (empty production)
+stack becomes [EOF, ENDING] top : ENDING tok : ENDstmt(FIN) pos : 3
+
+
+7 -> [EOF, ENDING] top : ENDING tok : ENDstmt(FIN) pos : 3
+ENDING is non-terminal so we look for table["ENDING"]["ENDstmt"] = [ENDstmt]
+so we pop ENDING
+and push ENDstmt
+stack becomes [EOF, ENDstmt] top : ENDstmt tok : ENDstmt(FIN) pos : 3
+
+
+8 -> [EOF, ENDstmt] top : ENDstmt tok : ENDstmt(FIN) pos : 3
+ENDstmt(FIN) is terminal so we check if top == tok => ENDstmt(FIN) == ENDstmt(FIN) => true
+top != EOF so we pop(top)
+and pos++
+stack becomes [EOF] top : EOF tok : EOF pos : 4
+
+
+9 -> [EOF] top : EOF tok : EOF pos : 4
+EOF is terminal so we check if top == tok => EOF == EOF => true
+top == EOF and tok == EOF so we accept 
+
 
 
 
