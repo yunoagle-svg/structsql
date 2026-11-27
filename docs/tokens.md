@@ -3,19 +3,31 @@
 Final token list, using your own names. See `StructSQL_grammar_tokens.pdf`
 section 1 for what changed from the draft and why.
 
+> **Changelog (latest):** reversed an earlier call on this page —
+> keywords are **case-sensitive**, not case-insensitive. `create` and
+> `Create` are plain `IDEN`, only the exact spelling `CREATE` is
+> `TABLECREATINGstmt` (confirmed against the actual lexer: `create` comes
+> back as `IDEN`, which is correct, not a bug). Also dropped the curly-quote
+> `’` as a valid string delimiter — only the straight `'` (U+0027) is
+> supported, since the lexer indexes the source as raw bytes (no `rune`
+> handling), and `’` is a 3-byte UTF-8 sequence that byte indexing can't
+> safely treat as a single quote character.
+
 ## Lexer rules (apply before tokenizing)
 
 - **Whitespace** (space, tab, `\n`, `\r`) is skipped, not tokenized. `;` is
   the real statement terminator, so newlines carry no meaning.
-- **Keywords are case-insensitive.** `CREATE`, `create` and `Create` are the
-  same token. Match the identifier/keyword scanner against an uppercased
-  copy of the lexeme.
-- **String quotes:** accept both `'` (U+0027) and `’` (U+2019, the curly
-  quote used in the spec's own PDF) as string delimiters.
+- **Keywords are case-sensitive.** Every keyword must match the exact
+  spelling in the table below — `CREATE` is a keyword, `create`/`Create`/
+  `CREATE ` with different casing are just an `IDEN`. No uppercasing or
+  normalizing of the lexeme before the keyword lookup.
+- **String quotes:** only the straight `'` (U+0027) delimits a string. The
+  curly quote `’` is not supported — treat it as an unrecognized character
+  if it shows up (lexical error).
 - On an unrecognized character, report a lexical error and keep scanning —
   don't stop at the first bad character.
 
-## Keywords (case-insensitive)
+## Keywords (case-sensitive)
 
 | Token               | Lexeme      | Meaning                                                |
 | ------------------- | ----------- | ------------------------------------------------------ |
@@ -85,10 +97,11 @@ section 1 for what changed from the draft and why.
 
 ## Special
 
-| Token         | Meaning                                                                        |
-| ------------- | ------------------------------------------------------------------------------ |
-| `EOF`         | end of the source file                                                         |
-| lexical error | an unrecognized character (see `output_contract.md` for the error line format) |
+| Token           | Meaning                                                                                                                                        |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `UNKNOWN_TOKEN` | the zero value of the `Kind` type — never emitted on purpose. If a token ever shows up with this kind, something didn't get filled in.         |
+| `EOF`           | end of the source file — appended once, as the last token in the slice                                                                         |
+| `LEXICAL_ERROR` | an unrecognized character. Reported (error printed) but **does not stop scanning** — the lexer keeps producing tokens for everything after it. |
 
 `\n` is **not** a token — confirmed correct in the draft: whitespace is
 skipped, and `;` is what actually ends a statement.
