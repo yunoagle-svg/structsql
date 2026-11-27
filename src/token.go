@@ -209,3 +209,75 @@ func (t Token) TokenInfo() string {
 
 
 
+func (k Kind) String() string {
+	switch k {
+	case UNKNOWN_TOKEN:
+		return "UNKNOWN_TOKEN"
+	case STARTstmt:
+		return "PROGRAMME"
+	case FINALstmt:
+		return ";"
+	case ENDstmt:
+		return "FIN"
+	case TABLECREATINGstmt:
+		return "CREATE"
+	case TABLEstmt:
+		return "TABLE"
+	case INSERTINGstmt:
+		return "INSERT"
+	case INTOstmt:
+		return "INTO"
+	case VALUESstmt:
+		return "VALUES"
+	case SELECTstmt:
+		return "SELECT"
+	case FROMstmt:
+		return "FROM"
+	case WHEREstmt:
+		return "WHERE"
+	case TYPEINTstmt:
+		return "INTEGER"
+	case TYPEFLOATstmt:
+		return "REAL"
+	case TYPESTRINGstmt:
+		return "string"
+	case OPENEDP:
+		return "("
+	case CLOSEDP:
+		return ")"
+	case COMMA:
+		return ","
+	case OPENEDB:
+		return "["
+	case CLOSEDB:
+		return "]"
+	case LESS_THAN:
+		return "<"
+	case GREATER_THAN:
+		return ">"
+	case NOT_EQUAL:
+		return "!="
+	case EQUAL:
+		return "="
+	case LESS_THAN_OR_EQUAL:
+		return "<="
+	case GREATER_THAN_OR_EQUAL:
+		return ">="
+	case STAR:
+		return "*"
+	case IDEN:
+		return "identifier"
+	case NUMBER_INT:
+		return "integer"
+	case NUMBER_REAL:
+		return "real"
+	case I_string:
+		return "string literal"
+	case EOF:
+		return "EOF"
+	case LEXICAL_ERROR:
+		return "LEXICAL_ERROR"
+	default:
+		return "UNKNOWN"
+	}
+}

@@ -303,20 +303,3 @@ func isIdent(str string) bool {
 	}
 	return true
 }
-func main() {
-	s := `PROGRAMME OpTest;
-SELECT * FROM T WHERE a = 1;
-SELECT * FROM T WHERE a != 2;
-SELECT * FROM T WHERE a < 3;
-SELECT * FROM T WHERE a <= 4;
-SELECT * FROM T WHERE a >= 5;
-FIN`
-	l := createLexer(s)
-	tokens, err := l.splitIntoTokens()
-	if err != nil {
-		fmt.Println("Error:", err)
-	}
-	for _, token := range tokens {
-		fmt.Printf("%+v : %+v \n", token.Literal, token.TokenType )
-	}
-}

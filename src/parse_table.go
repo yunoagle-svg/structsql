@@ -1,2 +1,147 @@
-// LL(1) data: FIRST/FOLLOW sets and the predictive parse table (non-terminal x token -> production).
 package main
+
+var table = map[Nonterminal]map[Kind][]Symbol{
+
+	// S -> STARTING stmts ENDING
+	S: {
+		STARTstmt: {NT(STARTING), NT(stmts), NT(ENDING)},
+	},
+
+	// STARTING -> STARTstmt IDEN FINALstmt
+	STARTING: {
+		STARTstmt: {T(STARTstmt), T(IDEN), T(FINALstmt)},
+	},
+
+	// ENDING -> ENDstmt
+	ENDING: {
+		ENDstmt: {T(ENDstmt)},
+	},
+
+	// stmts -> line stmts | EMPTY
+	stmts: {
+		TABLECREATINGstmt: {NT(line), NT(stmts)},
+		INSERTINGstmt:     {NT(line), NT(stmts)},
+		SELECTstmt:        {NT(line), NT(stmts)},
+		ENDstmt:           {}, // ε
+	},
+
+	// line -> CREATING | INSERTING | QUERIES
+	line: {
+		TABLECREATINGstmt: {NT(CREATING)},
+		INSERTINGstmt:     {NT(INSERTING)},
+		SELECTstmt:        {NT(QUERIES)},
+	},
+
+	// CREATING -> TABLECREATINGstmt TABLEstmt IDEN OPENEDP CREATINGEXP CLOSEDP FINALstmt
+	CREATING: {
+		TABLECREATINGstmt: {
+			T(TABLECREATINGstmt), T(TABLEstmt), T(IDEN), T(OPENEDP),
+			NT(CREATINGEXP), T(CLOSEDP), T(FINALstmt),
+		},
+	},
+
+	// CREATINGEXP -> IDEN TYPE COMMACASE_C
+	CREATINGEXP: {
+		IDEN: {T(IDEN), NT(TYPE), NT(COMMACASE_C)},
+	},
+
+	// COMMACASE_C -> COMMA IDEN TYPE COMMACASE_C | EMPTY
+	COMMACASE_C: {
+		COMMA:   {T(COMMA), T(IDEN), NT(TYPE), NT(COMMACASE_C)},
+		CLOSEDP: {}, // ε
+	},
+
+	// TYPE -> TYPEINTstmt | TYPEFLOATstmt | TYPESTRINGstmt OPENEDB NUMBER_INT CLOSEDB
+	TYPE: {
+		TYPEINTstmt:    {T(TYPEINTstmt)},
+		TYPEFLOATstmt:  {T(TYPEFLOATstmt)},
+		TYPESTRINGstmt: {T(TYPESTRINGstmt), T(OPENEDB), T(NUMBER_INT), T(CLOSEDB)},
+	},
+
+	// INSERTING -> INSERTINGstmt INTOstmt IDEN VALUESstmt OPENEDP INSERTIONEXP CLOSEDP FINALstmt
+	INSERTING: {
+		INSERTINGstmt: {
+			T(INSERTINGstmt), T(INTOstmt), T(IDEN), T(VALUESstmt), T(OPENEDP),
+			NT(INSERTIONEXP), T(CLOSEDP), T(FINALstmt),
+		},
+	},
+
+	// INSERTIONEXP -> LITERALVALUES COMMACASES_I
+	INSERTIONEXP: {
+		NUMBER_INT:  {NT(LITERALVALUES), NT(COMMACASES_I)},
+		NUMBER_REAL: {NT(LITERALVALUES), NT(COMMACASES_I)},
+		I_string:    {NT(LITERALVALUES), NT(COMMACASES_I)},
+	},
+
+	// LITERALVALUES -> NUMBER_INT | NUMBER_REAL | I_string
+	LITERALVALUES: {
+		NUMBER_INT:  {T(NUMBER_INT)},
+		NUMBER_REAL: {T(NUMBER_REAL)},
+		I_string:    {T(I_string)},
+	},
+
+	// COMMACASES_I -> COMMA LITERALVALUES COMMACASES_I | EMPTY
+	COMMACASES_I: {
+		COMMA:   {T(COMMA), NT(LITERALVALUES), NT(COMMACASES_I)},
+		CLOSEDP: {}, // ε
+	},
+
+	// QUERIES -> SELECTstmt SELECTEXP FROMstmt FROMEXP WHERECASE FINALstmt
+	QUERIES: {
+		SELECTstmt: {
+			T(SELECTstmt), NT(SELECTEXP), T(FROMstmt), NT(FROMEXP), NT(WHERECASE), T(FINALstmt),
+		},
+	},
+
+	// SELECTEXP -> STAR | IDEN COMMACASE_SE
+	SELECTEXP: {
+		STAR: {T(STAR)},
+		IDEN: {T(IDEN), NT(COMMACASE_SE)},
+	},
+
+	// COMMACASE_SE -> COMMA IDEN COMMACASE_SE | EMPTY
+	COMMACASE_SE: {
+		COMMA:    {T(COMMA), T(IDEN), NT(COMMACASE_SE)},
+		FROMstmt: {}, // ε
+	},
+
+	// FROMEXP -> IDEN
+	FROMEXP: {
+		IDEN: {T(IDEN)},
+	},
+
+	// WHERECASE -> WHEREstmt CONDITON | EMPTY
+	WHERECASE: {
+		WHEREstmt:         {T(WHEREstmt), NT(CONDITON)},
+		FINALstmt:         {}, // ε
+		TABLECREATINGstmt: {}, // ε
+		INSERTINGstmt:     {}, // ε
+		SELECTstmt:        {}, // ε
+	},
+
+	// CONDITON -> CONDITIONEXP OP CONDITIONEXP
+	CONDITON: {
+		NUMBER_INT:  {NT(CONDITIONEXP), NT(OP), NT(CONDITIONEXP)},
+		NUMBER_REAL: {NT(CONDITIONEXP), NT(OP), NT(CONDITIONEXP)},
+		I_string:    {NT(CONDITIONEXP), NT(OP), NT(CONDITIONEXP)},
+		IDEN:        {NT(CONDITIONEXP), NT(OP), NT(CONDITIONEXP)},
+	},
+
+	// CONDITIONEXP -> NUMBER_INT | NUMBER_REAL | I_string | IDEN
+	CONDITIONEXP: {
+		NUMBER_INT:  {T(NUMBER_INT)},
+		NUMBER_REAL: {T(NUMBER_REAL)},
+		I_string:    {T(I_string)},
+		IDEN:        {T(IDEN)},
+	},
+
+	// OP -> LESS_THAN | GREATER_THAN | NOT_EQUAL | EQUAL | LESS_THAN_OR_EQUAL | GREATER_THAN_OR_EQUAL
+	OP: {
+		LESS_THAN:             {T(LESS_THAN)},
+		GREATER_THAN:          {T(GREATER_THAN)},
+		NOT_EQUAL:             {T(NOT_EQUAL)},
+		EQUAL:                 {T(EQUAL)},
+		LESS_THAN_OR_EQUAL:    {T(LESS_THAN_OR_EQUAL)},
+		GREATER_THAN_OR_EQUAL: {T(GREATER_THAN_OR_EQUAL)},
+	},
+}
