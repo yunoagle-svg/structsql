@@ -130,7 +130,15 @@ type parser struct {
 }
 
 
+/*
+example of ll(1) algo chaine 
+Stack [EOF($), S(axiome)]
+chaineOfTokens(from the lexer) [STARTstmt(PROGRAMME), IDEN(Etudiant), FINALstmt(;), ENDstmt(FIN)]
 
+
+
+
+*/
 func (p *parser) Parse() error {
 	for len(p.stack) > 0 {
 		top := p.stack[len(p.stack)-1]
@@ -183,7 +191,7 @@ func lookFor(tr Kind, nt Nonterminal) ([]Symbol, error) {
     if production, exist := table[nt][tr]; exist {
         return production, nil
     }
-    return nil, fmt.Errorf("no production found for nonterminal %v and token %v", nt, tr)
+    return nil, fmt.Errorf("no production found for nonterminal %v and token %v", nt.String(), tr.String())
 }
 
 func (p *parser) push(s []Symbol) {
@@ -200,14 +208,9 @@ func isItTerminal(s Symbol) bool {
 func isMatch(i Kind, ii Kind) bool {
 	return i == ii
 }
-func (p *parser) resetNT(t *Symbol) {
-	*t = p.stack[len(p.stack)-1]
-}
-func (p *parser) resetTR(t *Kind){
-	*t = p.tokens[p.pos].TokenType
-}
+
 func main() {
-	source := `PROGRAMME x FIN`
+	source := `PROGRAMME x;`
 
 	l := createLexer(source)
 	t, err0 := l.splitIntoTokens()
