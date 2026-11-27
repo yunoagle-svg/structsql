@@ -198,10 +198,6 @@ stack becomes [EOF] top : EOF tok : EOF pos : 4
 EOF is terminal so we check if top == tok => EOF == EOF => true
 top == EOF and tok == EOF so we accept 
 
-
-
-
-
 */
 func (p *parser) Parse() error {
 	for len(p.stack) > 0 {
