@@ -136,7 +136,7 @@ func (l *lexer) splitIntoTokens() ([]Token, error) {
 			if symKind, ok := isSymbol(twoChar); ok {
 				if !isEmpty(result) {
 					tok, err := check(result, l.line, l.column)
-					// CHANGED: same reasoning as above — keep scanning
+					//same reasoning as above — keep scanning
 					// instead of returning out of the whole function.
 					tokens = append(tokens, tok)
 					if err != nil {
@@ -304,13 +304,19 @@ func isIdent(str string) bool {
 	return true
 }
 func main() {
-		s := `create TABLE Etudiant (id INTEGER, nom string[20]); @@@ FIN`
-		l := createLexer(s)
-		tokens, err := l.splitIntoTokens()
-		if err != nil {
-			fmt.Println("Error:", err)
-		}
-		for _, token := range tokens {
-			fmt.Printf("%+v\n", token)
-		}
+	s := `PROGRAMME OpTest;
+SELECT * FROM T WHERE a = 1;
+SELECT * FROM T WHERE a != 2;
+SELECT * FROM T WHERE a < 3;
+SELECT * FROM T WHERE a <= 4;
+SELECT * FROM T WHERE a >= 5;
+FIN`
+	l := createLexer(s)
+	tokens, err := l.splitIntoTokens()
+	if err != nil {
+		fmt.Println("Error:", err)
+	}
+	for _, token := range tokens {
+		fmt.Printf("%+v : %+v \n", token.Literal, token.TokenType )
+	}
 }
